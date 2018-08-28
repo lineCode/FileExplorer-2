@@ -23,8 +23,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-
-
+#include <limits.h>
+using namespace std;
 static struct termios initialsettings, newsettings;
 
 

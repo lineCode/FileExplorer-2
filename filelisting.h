@@ -34,15 +34,16 @@ void move_up(int dis);
 void move_left(int dis); 
 void move_right(int dis); 
 void setCursorAtEnd();
+void handleDirectoryName();
 using namespace std;
 
 
-
+void FileExplorer();
 void handleOutput();
 
 void errorHandler(int code);
 void listFile(char *dirname);
 
-
+char* handleDirectoryName(char* dir);
 
 #endif

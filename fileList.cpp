@@ -8,9 +8,10 @@ int total_rows=0;
 int current_pos=1;
 int overflow_flag=0;
 int current_ind=0;
+int debug=0;
+char parentDir[PATH_MAX]="";
 
-
- struct fileAttributes{
+struct fileAttributes{
 
         char user_grp_others[12];
         string user_name;
@@ -44,6 +45,8 @@ void printFileAttributes(int start,int end){
 	
 	if(end>directories.size())
 		end=directories.size()-1;
+	if(start<0)
+		start=0;
 	for(int i=start;i<=end;i++)
 	{
 
@@ -60,7 +63,34 @@ void printFileAttributes(int start,int end){
 
 }
 
+char* handleDirectoryName(char* dir)
+{
 
+        
+		if(dir[0]=='/')		
+        	return dir;
+        else
+        {
+
+        	char* dir2;
+        	int i;	
+        	dir2[0]='/';
+        	for( i=1;dir[i-1]!='\0';i++)
+        		dir2[i]=dir[i-1];
+        	dir2[i]=dir[i];
+
+
+        	//cout<<"directory is"<<dir2;
+        	strcat(parentDir,dir2);
+
+        	return parentDir;
+
+
+        }
+
+
+
+}
 
 void move_up(int dis)
 {
@@ -69,20 +99,14 @@ void move_up(int dis)
 		if(current_pos>=upper_end )
 		{
 		current_pos-=dis;
-		
 		printf("\033[%d;1H",current_pos);
-		
 		}
 		else
 		{	
-		
-		if(offset){
+				
+		if(offset && overflow_flag){
 			clearScr();
 			printFileAttributes(offset-1,lower_end+offset-1);
-
-
-
-
 			redraw();
 			offset-=1;
 		}
@@ -97,21 +121,22 @@ void move_down(int dis)
 {
 	
 	
-	if(current_pos<=lower_end)
+	if(current_pos<lower_end)
 	{	
 		current_pos+=dis;
 		
 		printf("\033[%d;1H",current_pos);
 		
+		
 	}
 	else
 	{
-
+		if(overflow_flag){
 		offset+=1;
 		clearScr();
-		printFileAttributes((upper_end-1)+offset,lower_end+offset);
+		printFileAttributes((upper_end-1)+offset,lower_end+offset-1);
 		setCursorAtEnd();
-
+	}
 
 	}
 
@@ -186,13 +211,29 @@ void handleOutput(){
 		}
 		else if(c==ENTER)
 		{	
-			printf("\033[40;70H");
-			cout<<"you chose"<<directories[current_pos+offset-1].dirname;
+			
+			
+			//cout<<"you selected"<<handleDirectoryName(selectedDir);
+			 struct fileAttributes fileattributes=directories[current_pos+offset-1];
+			directories.push_back(fileattributes);
+			 debug=1;
+			 
+			
+			 directories.clear();
+			directories.push_back(fileattributes);
+			
+			 if(fileattributes.user_grp_others[0]=='d')
 
-			struct fileAttributes fileattributes;
-			fileattributes=directories[current_pos+offset-1];
-			if(fileattributes.user_grp_others[0]=='d')
-				listFile(fileattributes.dirname);
+			 {
+			
+			 	char* selectedDir=directories[current_pos+offset-1].dirname;	
+			 	selectedDir=handleDirectoryName(selectedDir);
+			 	cout<<selectedDir;
+			 	
+			 	listFile(selectedDir);
+
+			  }
+
 		}
 
 	}
@@ -226,53 +267,69 @@ void errorHandler(int code){
 
 
 
+void FileExplorer()
+{
+
+
+	//char pwd[PATH_MAX];
+
+	if(getcwd(parentDir, sizeof(parentDir)) == NULL) 
+	{
+		cout<<"error in fetching current directory";
+	}
+	
+
+		listFile(parentDir);
+
+
+
+}
+
+
+
+
+
+
+
 void listFile(char *dirname)
 {
 		DIR *dp;
+
 		struct dirent *dirp;
 		struct stat fileDetails;
-	
 		struct group *group_details;
 		struct passwd *user_details;
 		struct fileAttributes fileattributes;
 		char ugo[11];
-
-
-
 		if (ioctl(0, TIOCGWINSZ, (char *) &size) < 0)
 			errorHandler(13);
-
-	//row=directories.size();
-
 		total_rows=size.ws_row-2;
-		
-	
 
-
-
-
-
-
-		if((dp = opendir(dirname))==NULL)
+		if((dp = opendir(dirname))==NULL){
 			errorHandler(12);
+			cout<<"no issues here";
+
+		}
 		else
 		{
+
 		while ((dirp = readdir(dp)) != NULL)
 		{	
 
 		    	stat(dirp->d_name,&fileDetails);
-		    	mode_t permission=fileDetails.st_mode;
-		    	ugo[0]=permission & S_IFDIR ? 'd' : '-';
-		   		ugo[1]=permission & S_IRUSR ? 'r' : '-';
-		   		ugo[2]=permission & S_IWUSR ? 'w' : '-';
-		   		ugo[3]=permission & S_IXUSR ? 'x' : '-';
-		   		ugo[4]=permission & S_IRGRP ? 'r' : '-';
-		   		ugo[5]=permission & S_IWGRP ? 'w' : '-';
-		   		ugo[6]=permission & S_IXGRP ? 'x' : '-';
-		   		ugo[7]=permission & S_IROTH ? 'r' : '-';
-		   		ugo[8]=permission & S_IWOTH ? 'w' : '-';
-		   		ugo[9]=permission & S_IXOTH ? 'x' : '-';
-		   		ugo[10]='\0';
+		    	
+			    	mode_t permission=fileDetails.st_mode;
+			    	ugo[0]=permission & S_IFDIR ? 'd' : '-';
+			   		ugo[1]=permission & S_IRUSR ? 'r' : '-';
+			   		ugo[2]=permission & S_IWUSR ? 'w' : '-';
+			   		ugo[3]=permission & S_IXUSR ? 'x' : '-';
+			   		ugo[4]=permission & S_IRGRP ? 'r' : '-';
+			   		ugo[5]=permission & S_IWGRP ? 'w' : '-';
+			   		ugo[6]=permission & S_IXGRP ? 'x' : '-';
+			   		ugo[7]=permission & S_IROTH ? 'r' : '-';
+			   		ugo[8]=permission & S_IWOTH ? 'w' : '-';
+			   		ugo[9]=permission & S_IXOTH ? 'x' : '-';
+			   		ugo[10]='\0';
 
 		   		size_t fileSize=(fileDetails.st_size/1024);
 		    	
@@ -289,30 +346,38 @@ void listFile(char *dirname)
 		    		last_modified_time[last_modified_time.length()-1]='\0';
 
 		    	strcpy(fileattributes.user_grp_others, ugo);
+		   		
 		   		fileattributes.file_size=fileSize;
 		    	fileattributes.user_name=user_name;
 		    	fileattributes.group_name=group_name;
 				fileattributes.last_modified_time=last_modified_time;
 		    	fileattributes.dirname=dirp->d_name;
 		    	fileattributes.b=t;
+		    	if(fileattributes==NULL)
+		    		cout<<"it is null";
+		    	if(debug==0){
+
 		    	directories.push_back(fileattributes);
 		    	
-    	
+    			}	
 
     	}
-
+    	if(debug==0){
     	if(total_rows<directories.size())
 			overflow_flag=1;
 		lower_end= (overflow_flag)?total_rows:directories.size();
 
 
     	clearScr();
-    	printFileAttributes(upper_end-1,lower_end-1);
+    	if(debug==0)
+    		printFileAttributes(upper_end-1,lower_end-1);
     	redraw();
     	handleOutput();
-    	closedir(dp);
-   		  
+    	
+   		}  
+   		closedir(dp);
    }
+   
 }
 
 
