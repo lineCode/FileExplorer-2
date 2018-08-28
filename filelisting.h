@@ -43,7 +43,7 @@ void handleOutput();
 
 void errorHandler(int code);
 void listFile(char *dirname);
-
+void resetCursor();
 char* handleDirectoryName(char* dir);
 
 #endif

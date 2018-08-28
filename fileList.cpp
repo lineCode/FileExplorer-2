@@ -22,6 +22,16 @@ struct fileAttributes{
         char* dirname;
 };
 vector<fileAttributes> directories;
+
+void resetCursor()
+{
+	current_pos=1;
+	offset=0;
+	int upper_end=1;
+	int lower_end=0;
+
+}
+
 void clearScr()
 {
 	printf("\x1b[2J");
@@ -72,7 +82,7 @@ char* handleDirectoryName(char* dir)
         else
         {
 
-        	char* dir2;
+        	char dir2[255];
         	int i;	
         	dir2[0]='/';
         	for( i=1;dir[i-1]!='\0';i++)
@@ -213,23 +223,26 @@ void handleOutput(){
 		{	
 			
 			
-			//cout<<"you selected"<<handleDirectoryName(selectedDir);
+			
 			 struct fileAttributes fileattributes=directories[current_pos+offset-1];
-			directories.push_back(fileattributes);
+
 			 debug=1;
 			 
-			
-			 directories.clear();
-			directories.push_back(fileattributes);
-			
+				//cout<<directories.size();
+			cout<<"pressed enter";
 			 if(fileattributes.user_grp_others[0]=='d')
 
 			 {
-			
+				cout<<"opening directoy";
 			 	char* selectedDir=directories[current_pos+offset-1].dirname;	
-			 	selectedDir=handleDirectoryName(selectedDir);
-			 	cout<<selectedDir;
 			 	
+			 	handleDirectoryName(selectedDir);
+			 //	char *selectedDir2="/home/suchismith/Desktop/File_Explorer/tryouts/sampleDir";
+			 	//cout<<selectedDir;
+			 	cout<<directories.size();
+			 	directories.erase(directories.begin(),directories.end());
+			 	// cout<<directories.size();
+
 			 	listFile(selectedDir);
 
 			  }
@@ -313,24 +326,25 @@ void listFile(char *dirname)
 		else
 		{
 
-		while ((dirp = readdir(dp)) != NULL)
-		{	
-
+			while ((dirp = readdir(dp)) != NULL)
+			{	
+				//cout<<dirp->d_name;
+				
 		    	stat(dirp->d_name,&fileDetails);
-		    	
-			    	mode_t permission=fileDetails.st_mode;
-			    	ugo[0]=permission & S_IFDIR ? 'd' : '-';
-			   		ugo[1]=permission & S_IRUSR ? 'r' : '-';
-			   		ugo[2]=permission & S_IWUSR ? 'w' : '-';
-			   		ugo[3]=permission & S_IXUSR ? 'x' : '-';
-			   		ugo[4]=permission & S_IRGRP ? 'r' : '-';
-			   		ugo[5]=permission & S_IWGRP ? 'w' : '-';
-			   		ugo[6]=permission & S_IXGRP ? 'x' : '-';
-			   		ugo[7]=permission & S_IROTH ? 'r' : '-';
-			   		ugo[8]=permission & S_IWOTH ? 'w' : '-';
-			   		ugo[9]=permission & S_IXOTH ? 'x' : '-';
-			   		ugo[10]='\0';
-
+	    	
+		    	mode_t permission=fileDetails.st_mode;
+		    	ugo[0]=permission & S_IFDIR ? 'd' : '-';
+		   		ugo[1]=permission & S_IRUSR ? 'r' : '-';
+		   		ugo[2]=permission & S_IWUSR ? 'w' : '-';
+		   		ugo[3]=permission & S_IXUSR ? 'x' : '-';
+		   		ugo[4]=permission & S_IRGRP ? 'r' : '-';
+		   		ugo[5]=permission & S_IWGRP ? 'w' : '-';
+		   		ugo[6]=permission & S_IXGRP ? 'x' : '-';
+		   		ugo[7]=permission & S_IROTH ? 'r' : '-';
+		   		ugo[8]=permission & S_IWOTH ? 'w' : '-';
+		   		ugo[9]=permission & S_IXOTH ? 'x' : '-';
+		   		ugo[10]='\0';
+		   		
 		   		size_t fileSize=(fileDetails.st_size/1024);
 		    	
 		   		char t=(fileDetails.st_size/1024>1)?'K':'B';
@@ -353,28 +367,34 @@ void listFile(char *dirname)
 				fileattributes.last_modified_time=last_modified_time;
 		    	fileattributes.dirname=dirp->d_name;
 		    	fileattributes.b=t;
-		    	if(fileattributes==NULL)
-		    		cout<<"it is null";
-		    	if(debug==0){
-
-		    	directories.push_back(fileattributes);
+		    
+		    
 		    	
-    			}	
 
-    	}
-    	if(debug==0){
-    	if(total_rows<directories.size())
-			overflow_flag=1;
-		lower_end= (overflow_flag)?total_rows:directories.size();
+			    	
+			    directories.push_back(fileattributes);
+		    	
+		    	// else
+		    	// {
+		    	// 	 //directories.clear();
+		    		 
+		    	// 	//directories.erase(directories.begin(),directories.end());
+		    	// }
+    		
 
-
-    	clearScr();
-    	if(debug==0)
-    		printFileAttributes(upper_end-1,lower_end-1);
-    	redraw();
-    	handleOutput();
-    	
-   		}  
+	    	}
+	    	//cout<<directories.size();
+	    	//if(debug==0){
+	    	if(total_rows<directories.size())
+				overflow_flag=1;
+			lower_end= (overflow_flag)?total_rows:directories.size();
+			resetCursor();
+			clearScr();
+	    	printFileAttributes(upper_end-1,lower_end-1);
+	    	redraw();
+	    	handleOutput();
+    	//}
+   	
    		closedir(dp);
    }
    
