@@ -2,6 +2,7 @@
 #ifndef FILELISTING_H
 #define FILELISTING_H
 #include <vector>
+#include <stack>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -22,13 +23,14 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-
+#include<string.h>
 static struct winsize size;
 
 #define ESC  27
 #define ENTER   10
-
-
+#define HOME 'h'
+#define BACK 127
+void printDebug();
 void move_down(int dis); 
 void move_up(int dis); 
 void move_left(int dis); 
@@ -40,7 +42,7 @@ using namespace std;
 
 void FileExplorer();
 void handleOutput();
-
+char* constructPath();
 void errorHandler(int code);
 void listFile(char *dirname);
 void resetCursor();

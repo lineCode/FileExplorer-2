@@ -15,7 +15,7 @@ main(int argc, char *argv[])
 			normalModeOn();
 			FileExplorer();
 			
-			//listFile(pwd);
+			
 			
 			normalModeOff();
 

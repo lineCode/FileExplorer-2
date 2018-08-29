@@ -1,16 +1,24 @@
 #include "filelisting.h"
 #include "normalmode.h"
 using namespace std;
+int visit=0;
+int trajectory_index=0;
+int visit_flag=0;
 int offset=0;
 int upper_end=1;
 int lower_end=0;
 int total_rows=0;
 int current_pos=1;
 int overflow_flag=0;
+int firstVisit=0;
 int current_ind=0;
 int debug=0;
-char parentDir[PATH_MAX]="";
-
+char currentDir[PATH_MAX]="";
+char homeDir[PATH_MAX]="";
+char leftPath[PATH_MAX]="";
+vector<string> trajectory;
+vector<char*> filePaths;
+char fullPath[PATH_MAX];
 struct fileAttributes{
 
         char user_grp_others[12];
@@ -22,6 +30,25 @@ struct fileAttributes{
         char* dirname;
 };
 vector<fileAttributes> directories;
+
+
+char* constuctPath(){
+
+	
+	  memset(fullPath, 0, sizeof(filePaths));
+	
+	for(int i=0;i<filePaths.size();i++){
+		strcat(fullPath,filePaths[i]);
+	}
+
+	return fullPath;
+
+}
+
+
+
+
+
 
 void resetCursor()
 {
@@ -88,12 +115,18 @@ char* handleDirectoryName(char* dir)
         	for( i=1;dir[i-1]!='\0';i++)
         		dir2[i]=dir[i-1];
         	dir2[i]=dir[i];
+        	strcpy(dir,dir2);
 
 
-        	//cout<<"directory is"<<dir2;
-        	strcat(parentDir,dir2);
+        	filePaths.push_back(dir);
 
-        	return parentDir;
+        	strcat(currentDir,dir2);
+        	strcat(leftPath,currentDir);
+
+        	string str(currentDir);
+        	trajectory.push_back(str);
+        	trajectory_index+=1;
+        	return currentDir;
 
 
         }
@@ -159,7 +192,27 @@ void move_down(int dis)
 }
 
 void move_left()
-{printf("\033[%dC",1);
+{
+
+
+	if(visit_flag)
+	{	
+
+
+		
+		trajectory_index>0?trajectory_index-=1:trajectory_index=0;
+		string visited_dir=trajectory[trajectory_index];
+		int length=visited_dir.length();
+		char path[length+1];
+		strcpy(path,visited_dir.c_str());
+		strcpy(currentDir,path);
+		directories.erase(directories.begin(),directories.end());
+		listFile(path);
+
+
+
+
+	}
 
 }
 void move_right()
@@ -168,6 +221,25 @@ void move_right()
 	// char *filename = new char[str1.length() + 1];
 	// strcpy(filename, str.c_str());
 	// listFile(.c_str());
+
+	if(visit_flag)
+	{	
+
+
+		trajectory_index<trajectory.size()-1?trajectory_index+=1:trajectory_index=trajectory.size()-1;
+		string visited_dir=trajectory[trajectory_index];
+		int length=visited_dir.length();
+		char path[length+1];
+		strcpy(path,visited_dir.c_str());
+		strcpy(currentDir,path);
+		directories.erase(directories.begin(),directories.end());
+		listFile(path);
+
+
+	}
+
+
+
 }
 
 
@@ -178,17 +250,7 @@ void move_right()
 
 
 void handleOutput(){
-
-	
-
-
-	
-
-
-
-		
-
-
+    
      while(1){
      	int c = getchar();
 		if(c==ESC)
@@ -207,10 +269,10 @@ void handleOutput(){
                 		move_down(1);
                 		break;
             		case 'C':
-                		move_left();
+                		move_right();
                 		break;
             		case 'D':
-                		move_right();
+                		move_left();
                 		break;
             		
         	}	
@@ -222,30 +284,59 @@ void handleOutput(){
 		else if(c==ENTER)
 		{	
 			
-			
+			visit+=1;
 			
 			 struct fileAttributes fileattributes=directories[current_pos+offset-1];
+			 char* selectedDir=directories[current_pos+offset-1].dirname;
+			  if(visit>1)
+			  	visit_flag=1;
 
-			 debug=1;
-			 
-				//cout<<directories.size();
-			cout<<"pressed enter";
+
 			 if(fileattributes.user_grp_others[0]=='d')
 
 			 {
-				cout<<"opening directoy";
-			 	char* selectedDir=directories[current_pos+offset-1].dirname;	
-			 	
-			 	handleDirectoryName(selectedDir);
-			 //	char *selectedDir2="/home/suchismith/Desktop/File_Explorer/tryouts/sampleDir";
-			 	//cout<<selectedDir;
-			 	cout<<directories.size();
-			 	directories.erase(directories.begin(),directories.end());
-			 	// cout<<directories.size();
+			 	selectedDir=handleDirectoryName(selectedDir);
+			 	//cout<<selectedDir;		 for(int i=0;i<trajectory.size();i++)
 
+			 	// trajectory.push_back(selectedDir);
+			 	// trajectory_index+=1;
+			 	directories.erase(directories.begin(),directories.end());
 			 	listFile(selectedDir);
 
 			  }
+			  else if(fileattributes.user_grp_others[0]=='-'){
+			  	int pid;
+			  	pid = fork();
+				if (pid == 0) {
+  					execl("/usr/bin/xdg-open", "xdg-open", selectedDir, (char *)0);
+  					exit(1);
+				}
+			  	}
+
+		}
+		else if(c==HOME)
+		{	
+			strcpy(currentDir,homeDir);
+			listFile(homeDir);
+
+
+		}
+		else if(c==BACK)
+		{
+			if(visit>1){
+						visit-=1;
+						char* lastVisitedDir;
+						filePaths.pop_back();
+						lastVisitedDir=constuctPath();
+						strcpy(currentDir,lastVisitedDir);
+						
+						trajectory.push_back(lastVisitedDir);
+						trajectory_index+=1;//cout<<lastVisitedDir;
+						directories.erase(directories.begin(),directories.end());
+						listFile(lastVisitedDir);
+		}
+
+
 
 		}
 
@@ -254,7 +345,13 @@ void handleOutput(){
 }
 
 
+void printDebug(){
 
+
+	cout<<"\033[40;50H";
+	cout<<trajectory[trajectory_index];
+
+}
 
 
 
@@ -286,13 +383,20 @@ void FileExplorer()
 
 	//char pwd[PATH_MAX];
 
-	if(getcwd(parentDir, sizeof(parentDir)) == NULL) 
+	if(getcwd(currentDir, sizeof(currentDir)) == NULL) 
 	{
 		cout<<"error in fetching current directory";
 	}
 	
+	if(getcwd(homeDir, sizeof(homeDir)) == NULL) 
+	{
+		cout<<"error in fetching current directory";
+	}
+	filePaths.push_back(homeDir);
+	trajectory.push_back(homeDir);
 
-		listFile(parentDir);
+	visit=1;
+	listFile(currentDir);
 
 
 
@@ -314,13 +418,31 @@ void listFile(char *dirname)
 		struct passwd *user_details;
 		struct fileAttributes fileattributes;
 		char ugo[11];
+		if(dirname=="..")
+		{	
+			visit-=1;
+			if(visit>=1){
+			strcpy(dirname,homeDir);
+			strcpy(currentDir,homeDir);
+			}
+		}
+		if(dirname==".")
+		{
+			strcpy(currentDir,currentDir);
+		}
+
+
+
+			
+
 		if (ioctl(0, TIOCGWINSZ, (char *) &size) < 0)
 			errorHandler(13);
 		total_rows=size.ws_row-2;
 
 		if((dp = opendir(dirname))==NULL){
+			cout<<"unable to open"<<dirname;
 			errorHandler(12);
-			cout<<"no issues here";
+
 
 		}
 		else
@@ -328,7 +450,7 @@ void listFile(char *dirname)
 
 			while ((dirp = readdir(dp)) != NULL)
 			{	
-				//cout<<dirp->d_name;
+
 				
 		    	stat(dirp->d_name,&fileDetails);
 	    	
@@ -374,26 +496,21 @@ void listFile(char *dirname)
 			    	
 			    directories.push_back(fileattributes);
 		    	
-		    	// else
-		    	// {
-		    	// 	 //directories.clear();
-		    		 
-		    	// 	//directories.erase(directories.begin(),directories.end());
-		    	// }
-    		
+
 
 	    	}
-	    	//cout<<directories.size();
-	    	//if(debug==0){
+
 	    	if(total_rows<directories.size())
 				overflow_flag=1;
 			lower_end= (overflow_flag)?total_rows:directories.size();
 			resetCursor();
 			clearScr();
 	    	printFileAttributes(upper_end-1,lower_end-1);
+	    	//printDebug();
 	    	redraw();
+	    	// printDebug();
 	    	handleOutput();
-    	//}
+
    	
    		closedir(dp);
    }
