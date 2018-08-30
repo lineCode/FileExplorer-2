@@ -26,9 +26,7 @@ int current_ind=0;
 int debug=0;
 char currentDir[PATH_MAX]="";
 char homeDir[PATH_MAX]="";
-char leftPath[PATH_MAX]="";
 vector<string> trajectory;
-vector<char*> filePaths;
 char fullPath[PATH_MAX];
 struct fileAttributes{
 
@@ -76,21 +74,20 @@ void printFileAttributes(int start,int end){
 
 	struct fileAttributes fileattr;
 
+	if(end>directories.size())
+		end=directories.size()-1;
 	
-	if(start>=0 && end<=directories.size()-1)
-	{
 	for(int i=start;i<=end;i++)
 	{
 
 		fileattr=directories[i];
 
-		cout << fileattr.user_grp_others << " "<< fileattr.user_name << " " << fileattr.group_name << " " << 
+		cout<< fileattr.user_grp_others << " "<< fileattr.user_name << " " << fileattr.group_name << " " << 
 		fileattr.file_size <<fileattr.b<<" "<< fileattr.last_modified_time<<" "<<fileattr.dirname <<"\n";
 
 	}
 	
 	
-	}	
 
 
 }
@@ -111,13 +108,7 @@ char* handleDirectoryName(char* dir)
         		dir2[i]=dir[i-1];
         	dir2[i]=dir[i];
         	strcpy(dir,dir2);
-
-
-        	//filePaths.push_back(dir);
-
         	strcat(currentDir,dir2);
-        	//strcat(leftPath,currentDir);
-
         	string str(currentDir);
         	trajectory.push_back(str);
         	trajectory_index+=1;
@@ -174,13 +165,13 @@ void move_down(int dis)
 		clearScr();
 		if(lower_end+offset-1<directories.size()){
 			printFileAttributes((upper_end-1)+offset,lower_end+offset-1);
+			
+			printStatusLine("NORMAL MODE");
 			setCursorAtEnd();
 			offset+=1;
 		}
 		else
 			printFileAttributes((upper_end-1)+offset,lower_end+offset-2);
-		//int sum=lower_end+offset;
-		cout<<current_pos<<" "<<(upper_end-1)+offset<<" "<<lower_end+offset<<" "<<directories.size();
 		}
 
 	}
@@ -231,7 +222,9 @@ void move_right()
 		char path[length+1];
 		strcpy(path,visited_dir.c_str());
 		strcpy(currentDir,path);
+		
 		directories.erase(directories.begin(),directories.end());
+
 		listFile(path);
 
 
@@ -355,12 +348,20 @@ void handleOutput(){
 						strcpy(currentDir,path);
 						trajectory.push_back(lastVisitedDir);
 						trajectory_index+=1;//cout<<lastVisitedDir;
+
+						
+
 						directories.erase(directories.begin(),directories.end());
+						cout<<currentDir;
 						listFile(currentDir);
 			}
 
 
 
+		}
+		else if(c=='q')
+		{
+			return;
 		}
 
 	}
@@ -396,7 +397,6 @@ void FileExplorer()
 {
 
 
-	//char pwd[PATH_MAX];
 
 	if(getcwd(currentDir, sizeof(currentDir)) == NULL) 
 	{
@@ -407,7 +407,6 @@ void FileExplorer()
 	{
 		cout<<"error in fetching home directory";
 	}
-	filePaths.push_back(homeDir);
 	trajectory.push_back(homeDir);
 
 	visit=1;
@@ -418,7 +417,13 @@ void FileExplorer()
 }
 
 
+void printStatusLine(string mode)
+{
 
+	printf("\x1b[%d;0H",total_rows+2);
+	cout<<mode;
+	
+}
 
 
 
@@ -435,7 +440,7 @@ void listFile(char *dirname)
 		char ugo[11];
 		
 		if(strcmp(dirname,"..")==0)
-
+			strcpy(dirname,homeDir);
 			
 
 		if (ioctl(0, TIOCGWINSZ, (char *) &size) < 0)
@@ -505,8 +510,8 @@ void listFile(char *dirname)
 			lower_end= (overflow_flag)?total_rows:directories.size();
 			resetCursor();
 			clearScr();
-			//sort(directories.begin(),directories.end());
 	    	printFileAttributes(upper_end-1,lower_end-1);
+	    	printStatusLine("NORMAL MODE");
 	    	redraw();
 	    	handleOutput();
 

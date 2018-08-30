@@ -38,7 +38,7 @@ void move_right(int dis);
 void setCursorAtEnd();
 void handleDirectoryName();
 using namespace std;
-
+void printStatusLine(string mode);
 
 void FileExplorer();
 void handleOutput();
