@@ -31,7 +31,10 @@ void commandModeOff();
 int executeCommands(string command);
 void createDir(string path);
 void createFile(string path);
-
+#define ESC  27
+#define ENTER   10
+#define HOME 'h'
+#define BACK 127
 
 
 #endif

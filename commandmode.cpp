@@ -15,11 +15,21 @@ void commandModeOn()
 	char ch;
 	int i=0;
 	
-	while((int)ch !=27)
+	while(1)
 	{
 
-		ch=getchar();
+		char ch=getchar();
+		command+=ch;
+
+
+
+		if((int)ch==ESC)
+			return;
+		if((int)ch==BACK)
+		{
+			std::remove(command.begin(),command.end(),ch);
+			cout<<command;
+		}
 
 	}
-
 }

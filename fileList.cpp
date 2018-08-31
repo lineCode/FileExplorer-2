@@ -363,22 +363,18 @@ void handleOutput(){
 
 			printStatusLine("COMMAND MODE");
 			textModeOn();
-			//normalModeOff();
 			commandModeOn();
 			normalModeOn();	
-			//directories.erase(directories.begin(),directories.end());
-			printFileAttributes
-			listFile(currentDir);
-			
+			clearScr();
 			printFileAttributes(upper_end-1,lower_end-1);
-	    	printStatusLine("NORMAL MODE");
-	    	redraw();
+			printStatusLine("NORMAL MODE");
+			redraw();
 			continue;			
 
 		}
 		else if(c=='q')
 		{
-			
+
 		
 			return;
 		}
