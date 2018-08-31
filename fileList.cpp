@@ -8,6 +8,7 @@
 
 #include "filelisting.h"
 #include "normalmode.h"
+#include "commandMode.h"
 using namespace std;
 
 
@@ -206,6 +207,7 @@ void move_left()
 
 
 	}
+	return;
 
 }
 void move_right()
@@ -229,6 +231,7 @@ void move_right()
 
 
 	}
+	return;
 
 
 
@@ -359,8 +362,24 @@ void handleOutput(){
 
 
 		}
+		else if(c==':')
+		{
+
+			printStatusLine("COMMAND MODE");
+			textModeOn();
+			//normalModeOff();
+			commandModeOn();
+			normalModeOn();	
+			directories.erase(directories.begin(),directories.end());
+			listFile(currentDir);
+			
+			
+			continue;			
+
+		}
 		else if(c=='q')
 		{
+		
 			return;
 		}
 
@@ -411,7 +430,8 @@ void FileExplorer()
 
 	visit=1;
 	listFile(currentDir);
-
+	handleOutput();
+	return;
 
 
 }
@@ -513,7 +533,7 @@ void listFile(char *dirname)
 	    	printFileAttributes(upper_end-1,lower_end-1);
 	    	printStatusLine("NORMAL MODE");
 	    	redraw();
-	    	handleOutput();
+	    	
 
    	
    		closedir(dp);

@@ -25,13 +25,13 @@
 
 #include <limits.h>
 using namespace std;
-static struct termios initialsettings, newsettings;
+static struct termios initialsettings, newsettings,textsettings;
 
 
 
 void normalModeOn();
 void normalModeOff();
-
+void textModeOn();
 
 
 #endif

@@ -16,7 +16,7 @@ main(int argc, char *argv[])
 			FileExplorer();
 			
 			
-			
+			clearScr();
 			normalModeOff();
 
 

@@ -39,7 +39,7 @@ void setCursorAtEnd();
 void handleDirectoryName();
 using namespace std;
 void printStatusLine(string mode);
-
+void clearScr();
 void FileExplorer();
 void handleOutput();
 char* constructPath();

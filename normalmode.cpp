@@ -20,4 +20,12 @@ void normalModeOff()
    
 }
 
+void textModeOn()
+{
+	tcgetattr(0, &newsettings);
+	memcpy(&textsettings, &newsettings, sizeof(newsettings));
+    textsettings.c_lflag |= ECHO;
+    tcsetattr(0, TCSANOW, &textsettings);
+
+}
 
