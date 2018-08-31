@@ -350,12 +350,8 @@ void handleOutput(){
 						strcpy(path,lastVisitedDir.c_str());
 						strcpy(currentDir,path);
 						trajectory.push_back(lastVisitedDir);
-						trajectory_index+=1;//cout<<lastVisitedDir;
-
-						
-
+						trajectory_index+=1;
 						directories.erase(directories.begin(),directories.end());
-						cout<<currentDir;
 						listFile(currentDir);
 			}
 
@@ -370,15 +366,19 @@ void handleOutput(){
 			//normalModeOff();
 			commandModeOn();
 			normalModeOn();	
-			directories.erase(directories.begin(),directories.end());
+			//directories.erase(directories.begin(),directories.end());
+			printFileAttributes
 			listFile(currentDir);
 			
-			
+			printFileAttributes(upper_end-1,lower_end-1);
+	    	printStatusLine("NORMAL MODE");
+	    	redraw();
 			continue;			
 
 		}
 		else if(c=='q')
 		{
+			
 		
 			return;
 		}
