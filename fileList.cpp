@@ -25,10 +25,9 @@ int overflow_flag=0;
 int firstVisit=0;
 int current_ind=0;
 int debug=0;
-char currentDir[PATH_MAX]="";
-char homeDir[PATH_MAX]="";
+string currentDir="";
+string homeDirectory="";
 vector<string> trajectory;
-char fullPath[PATH_MAX];
 struct fileAttributes{
 
         char user_grp_others[12];
@@ -37,7 +36,7 @@ struct fileAttributes{
         string last_modified_time;
         char b;
         size_t file_size;
-        char* dirname;
+        string dirname;
 };
 vector<fileAttributes> directories;
 
@@ -93,7 +92,7 @@ void printFileAttributes(int start,int end){
 
 }
 
-char* handleDirectoryName(char* dir)
+string handleDirectoryName(string dir)
 {
 
         
@@ -101,18 +100,10 @@ char* handleDirectoryName(char* dir)
         	return dir;
         else
         {
-
-        	char dir2[255];
-        	int i;	
-        	dir2[0]='/';
-        	for( i=1;dir[i-1]!='\0';i++)
-        		dir2[i]=dir[i-1];
-        	dir2[i]=dir[i];
-        	strcpy(dir,dir2);
-        	strcat(currentDir,dir2);
-        	string str(currentDir);
-        	trajectory.push_back(str);
-        	trajectory_index+=1;
+        	string dir2="";
+        	dir2+="/";
+        	dir2+=dir;
+        	currentDir+=dir2;
         	return currentDir;
 
 
@@ -189,25 +180,21 @@ void move_left()
 {
 
 
+
 	if(visit_flag)
 	{	
 
+		 trajectory_index>0?trajectory_index-=1:trajectory_index=0;
+		 string visited_dir=trajectory[trajectory_index];
+		 currentDir=visited_dir;
+		 directories.erase(directories.begin(),directories.end());
+		 listFile(currentDir);
 
 		
-		trajectory_index>0?trajectory_index-=1:trajectory_index=0;
-		string visited_dir=trajectory[trajectory_index];
-		int length=visited_dir.length();
-		char path[length+1];
-		strcpy(path,visited_dir.c_str());
-		strcpy(currentDir,path);
-		directories.erase(directories.begin(),directories.end());
-		listFile(path);
-
-
-
 
 	}
-	return;
+
+	
 
 }
 void move_right()
@@ -220,18 +207,16 @@ void move_right()
 
 		trajectory_index<trajectory.size()-1?trajectory_index+=1:trajectory_index=trajectory.size()-1;
 		string visited_dir=trajectory[trajectory_index];
-		int length=visited_dir.length();
-		char path[length+1];
-		strcpy(path,visited_dir.c_str());
-		strcpy(currentDir,path);
-		
+		currentDir=visited_dir;
 		directories.erase(directories.begin(),directories.end());
 
-		listFile(path);
+		listFile(currentDir);
 
 
 	}
-	return;
+
+		
+	
 
 
 
@@ -281,47 +266,46 @@ void handleOutput(){
 			
 			
 			
-			 struct fileAttributes fileattributes=directories[current_pos+offset-1];
-			 char* selectedDir=directories[current_pos+offset-1].dirname;
-			  if(visit>1)
-			  	visit_flag=1;
-
+			struct fileAttributes fileattributes=directories[current_pos+offset-1];
+			string selectedDir=directories[current_pos+offset-1].dirname;
+			visit_flag=1;
 			  
 
 			 if(fileattributes.user_grp_others[0]=='d')
 
 			 {
-			 	
 
-			  	if((strcmp(selectedDir,"..")==0 || strcmp(selectedDir,".")==0) && visit==1){
-			
-			  		strcpy(currentDir,homeDir);
-			  		}
+			  	if(selectedDir==".."){
+	
+			  	 		currentDir=homeDirectory;
+
+			  	 	}
+			  	 else if(selectedDir==".")
+			  	 {
+			  	 	currentDir=currentDir;
+			  	 }	
 				 else{
 				 	visit+=1;		 	
-				 	selectedDir=handleDirectoryName(selectedDir);
-				 	//cout<<selectedDir;
+				 	selectedDir=handleDirectoryName(selectedDir);			  
 				 	trajectory.push_back(selectedDir);
 				 	trajectory_index+=1;
 				 	 
 				 	}
-					//strc(currentDir,selectedDir);
-					//cout<<selectedDir;
-			 		directories.erase(directories.begin(),directories.end());	
 
-			 		listFile(selectedDir);
+			 	directories.erase(directories.begin(),directories.end());	
+				listFile(currentDir);
 
 			  }
 			  else if(fileattributes.user_grp_others[0]=='-'){
 			  	int pid;
 			   	pid = fork();
+			   	string path;
+			   	path=currentDir;
+			   	path+="/";
 
-			   	char path[PATH_MAX];
-			   	strcpy(path,currentDir);
-			   	strcat(path,"/");
-			   	strcat(path,selectedDir);
+			   	path+=selectedDir;
 				if (pid == 0) {
-  					execl("/usr/bin/xdg-open", "xdg-open", path, (char *)0);
+  					execl("/usr/bin/xdg-open", "xdg-open", path.c_str(), (char *)0);
   					exit(1);
 				 }
 			  	}
@@ -330,10 +314,10 @@ void handleOutput(){
 		}
 		else if(c==HOME)
 		{	
-			strcpy(currentDir,homeDir);
+			currentDir=homeDirectory;
 			visit=1;
 			directories.erase(directories.begin(),directories.end());
-			listFile(homeDir);
+			listFile(homeDirectory);
 
 
 		}
@@ -341,17 +325,14 @@ void handleOutput(){
 		{
 
 
-			if(strcmp(currentDir,homeDir)){
+			if(currentDir!=homeDirectory){
 	
 						string lastVisitedDir=trajectory[trajectory_index];
 						lastVisitedDir=lastVisitedDir.substr(0,lastVisitedDir.find_last_of("/"));
-						int length=lastVisitedDir.length();
-						char path[length+1]="";
-						strcpy(path,lastVisitedDir.c_str());
-						strcpy(currentDir,path);
+						currentDir=lastVisitedDir;
 						trajectory.push_back(lastVisitedDir);
 						trajectory_index+=1;
-						directories.erase(directories.begin(),directories.end());
+						directories.clear();
 						listFile(currentDir);
 			}
 
@@ -362,12 +343,12 @@ void handleOutput(){
 		{
 
 			printStatusLine("COMMAND MODE");
-			textModeOn();
 			commandModeOn();
-			normalModeOn();	
 			clearScr();
-			printFileAttributes(upper_end-1,lower_end-1);
-			printStatusLine("NORMAL MODE");
+			//printFileAttributes(upper_end-1,lower_end-1);
+			//printStatusLine("NORMAL MODE");
+			directories.clear();
+			listFile(currentDir);
 			redraw();
 			continue;			
 
@@ -412,19 +393,24 @@ void FileExplorer()
 {
 
 
+	char currentDir1[PATH_MAX];
 
-	if(getcwd(currentDir, sizeof(currentDir)) == NULL) 
+	char homeDirectory1[PATH_MAX];
+	if(getcwd(currentDir1, sizeof(currentDir1)) == NULL) 
 	{
 		cout<<"error in fetching current directory";
 	}
-	
-	if(getcwd(homeDir, sizeof(homeDir)) == NULL) 
+	currentDir=currentDir1;
+
+	if(getcwd(homeDirectory1, sizeof(homeDirectory1)) == NULL) 
 	{
 		cout<<"error in fetching home directory";
 	}
-	trajectory.push_back(homeDir);
+	homeDirectory=homeDirectory1;
+	trajectory.push_back(homeDirectory);
 
 	visit=1;
+	cout<<homeDirectory;
 	listFile(currentDir);
 	handleOutput();
 	return;
@@ -444,7 +430,7 @@ void printStatusLine(string mode)
 
 
 
-void listFile(char *dirname)
+void listFile(string dirname)
 {
 		DIR *dp;
 
@@ -455,15 +441,15 @@ void listFile(char *dirname)
 		struct fileAttributes fileattributes;
 		char ugo[11];
 		
-		if(strcmp(dirname,"..")==0)
-			strcpy(dirname,homeDir);
+		if(dirname==".." && visit==1)
+			dirname=homeDirectory;
 			
 
 		if (ioctl(0, TIOCGWINSZ, (char *) &size) < 0)
 			errorHandler(13);
 		total_rows=size.ws_row-2;
 
-		if((dp = opendir(dirname))==NULL){
+		if((dp = opendir(dirname.c_str()))==NULL){
 			cout<<"unable to open"<<dirname;
 			errorHandler(12);
 
@@ -480,13 +466,11 @@ void listFile(char *dirname)
 		    		else
 		    		{
 
-
-					    	char dname[PATH_MAX]="";
-							strcpy(dname,currentDir);
-							strcat(dname,"/");
-							strcat(dname,dirp->d_name);
-						
-							stat(dname,&fileDetails);
+							string dname;
+							dname=currentDir;
+							dname+="/";
+							dname+=dirp->d_name;
+							stat(dname.c_str(),&fileDetails);
 		    		}
 
 			    mode_t permission=fileDetails.st_mode;

@@ -24,13 +24,18 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include<string.h>
-
+#include <sstream>
+void gotodir(string command);
+void rename(string command);
+void populateCommands();
 void commandModeOn();
-int fetchCommands(string command);
 void commandModeOff();
-int executeCommands(string command);
+void executeCommands(string command);
 void createDir(string path);
 void createFile(string path);
+void gotodir(string command);
+void deletefile(string command);
+void deletedir(string command);
 #define ESC  27
 #define ENTER   10
 #define HOME 'h'

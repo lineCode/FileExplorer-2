@@ -42,10 +42,9 @@ void printStatusLine(string mode);
 void clearScr();
 void FileExplorer();
 void handleOutput();
-char* constructPath();
 void errorHandler(int code);
-void listFile(char *dirname);
+void listFile(string dirname);
 void resetCursor();
-char* handleDirectoryName(char* dir);
+string handleDirectoryName(string dir);
 
 #endif

@@ -32,6 +32,6 @@ static struct termios initialsettings, newsettings,textsettings;
 void normalModeOn();
 void normalModeOff();
 void textModeOn();
-
+void textModeOff();
 
 #endif
