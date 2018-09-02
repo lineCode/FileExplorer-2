@@ -309,7 +309,7 @@ void handleOutput(){
 					if(path.find(".txt")!=string::npos || path.find(".h")!=string::npos || path.find(".cpp")!=string::npos|| path.find(".c")!=string::npos)
 					{
 					execl("/usr/bin/gedit", "gedit", path.c_str(), (char *)0);
-					}
+					}//execv("gedit",path.c_str());
   					else if(path.find(".mp3")!=string::npos || path.find(".mp4")!=string::npos ||path.find(".mkv")!=string::npos )
   					execl("/snap/bin/vlc", "vlc", path.c_str(), (char *)0);	
   					else if(path.find(".pdf")!=string::npos)

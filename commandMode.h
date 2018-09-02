@@ -41,6 +41,11 @@ void createFile(string path);
 void gotodir(string command);
 void deletefile(string command);
 void deletedir(string command);
+void copyFiles(string source,string destination);
+void copyDirectories(string source,string destination);
+void move(string command);
+void moveFiles(string source,string destination);
+void moveDirectories(string source,string destination);
 #define ESC  27
 #define ENTER   10
 #define HOME 'h'

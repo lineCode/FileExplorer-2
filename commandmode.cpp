@@ -11,8 +11,11 @@
 #include "normalmode.h"
 #include "commandMode.h"
 struct winsize size_win;
+struct stat fileDetails;
+static struct winsize size;
 string homeDir;
 string homeDir1;
+int totalrows;
 	string command="";
 map<string,int> mapOfCommands;
 using namespace std;
@@ -27,28 +30,73 @@ void populateCommands()
 	mapOfCommands.insert(pair<string,int>("delete_file",4));
 	mapOfCommands.insert(pair<string,int>("delete_dir",5));
 	mapOfCommands.insert(pair<string,int>("copy",6));
+	mapOfCommands.insert(pair<string,int>("move",7));
 }
 
-void copyFiles(string command)
+
+void move(string command)
 {
+
+
+	vector<string> commandlist;
 	stringstream test(command);
 	string segment="";
-	vector<string> commandlist;
-	string homeDir1=homeDir;
-	FILE *fptr,*source;
-
+	string destn="";
+	
 	while(getline(test,segment,' '))
 	{   
         
   		commandlist.push_back(segment);
- 		 cout<<segment<<"\n";
+	}
+	destn=commandlist[commandlist.size()-1];
+
+	for(int i=1;i<=commandlist.size()-2;i++)
+	{
+
+		string folder=commandlist[i];
+		cout<<folder;
+		chdir(homeDir.c_str());
+		stat(folder.c_str(),&fileDetails);
+		mode_t permission=fileDetails.st_mode;
+		char dir=permission & S_IFDIR ? 'd' : '-';
+		if(dir=='-')
+		{	
+			//cout<<"it is a file";
+			moveFiles(folder,destn);
+		
+		 	
+		}
+		if(dir=='d')
+		{
+			moveDirectories(folder,destn);
+		}
+
+
+
 	}
 
-		 string command1=commandlist[0];
-		 string destn=commandlist[commandlist.size()-1];
 
-		 if(destn.find("~")!=std::string::npos)
-		
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+void moveFiles(string source,string destn)
+{
+
+	string homeDir1=homeDir;
+	FILE *fptr1,*fptr2;
+
+		if(destn.find("~")!=std::string::npos)
 		{	
 			int index=destn.find("~");
 			destn.replace(index,1,"");
@@ -57,34 +105,225 @@ void copyFiles(string command)
 
 
 		}	
-
-
-
-		 for(int i=1;i<=commandlist.size()-2;i++)
-		 {
-
-		 	string file=commandlist[i];
+		 
 
 
 
 
 
 		 	destn+="/";
-		 	destn+=file;
-			fptr=fopen(destn.c_str(),"w");
-			source=fopen(file.c_str(),"r");
-			if(fptr!=NULL && source!=NULL){
+		 	destn+=source;
+			fptr2=fopen(destn.c_str(),"w");
+			fptr1=fopen(source.c_str(),"r");
+			if(fptr1==NULL)
+				cout<<"Wrong file";
+			if(fptr2==NULL)
+				cout<<"Wrong file";
+
+
+
+
+			if(fptr1!=NULL && fptr2!=NULL){
 
 			char ch;
-			while((ch=fgetc(source))!=EOF)
+			while((ch=fgetc(fptr1))!=EOF)
 			{
 			
-				fputc(ch,fptr);
+				fputc(ch,fptr2);
 			}
-			fclose(fptr);
-			fclose(source);
+			fclose(fptr1);
+			fclose(fptr2);
+			remove(source.c_str());
+			cout<<"files copied succesfully";
 			}
+			
+			
+
+}
+
+
+
+
+
+
+
+
+void copyCommand(string command)
+{
+	vector<string> commandlist;
+	stringstream test(command);
+	string segment="";
+	string destn="";
+	
+	while(getline(test,segment,' '))
+	{   
+        
+  		commandlist.push_back(segment);
+	}
+	destn=commandlist[commandlist.size()-1];
+
+	for(int i=1;i<=commandlist.size()-2;i++)
+	{
+
+		string folder=commandlist[i];
+		cout<<folder;
+		chdir(homeDir.c_str());
+		stat(folder.c_str(),&fileDetails);
+		mode_t permission=fileDetails.st_mode;
+		char dir=permission & S_IFDIR ? 'd' : '-';
+		if(dir=='-')
+		{	
+			//cout<<"it is a file";
+			copyFiles(folder,destn);
+		
+		 	
 		}
+		if(dir=='d')
+		{
+			copyDirectories(folder,destn);
+		}
+
+
+
+	}
+
+
+
+
+
+}
+
+
+
+
+void moveDirectories(string source,string destn)
+{
+	copyDirectories(source,destn);
+		
+
+
+}
+
+
+
+
+
+void copyDirectories(string source,string destn)
+{
+	DIR *dp;
+	struct dirent *dirp;
+	vector<string> directoryList;
+	vector<string> destinationList;
+	string homeDir1=homeDir;
+	if(source.find("/")!=std::string::npos)
+	{
+		homeDir1+=source;
+	    destn=destn+source;
+	    directoryList.push_back(homeDir1);
+	    destinationList.push_back(destn);
+	}
+	else
+	{
+	homeDir1+="/"+source;
+
+	directoryList.push_back(homeDir1);
+	destn=destn+"/"+source;
+	destinationList.push_back(destn);
+
+	}
+
+	while(!directoryList.empty()){
+
+		 	string traverseDir=directoryList.front();
+		 	string target=destinationList.front();
+		 	destinationList.erase(destinationList.begin());
+		 	directoryList.erase(directoryList.begin());
+		
+   			stat(target.c_str(), &fileDetails);
+		 	mkdir(target.c_str(),fileDetails.st_mode);
+
+
+
+
+		 	DIR *dp;
+		 	if( (dp = opendir(traverseDir.c_str()))!=NULL)
+		 		dirp = readdir(dp);
+		 	
+		 	chdir(traverseDir.c_str());
+		 	cout<<target<<"\n";
+		 	while ((dirp = readdir(dp)) != NULL){
+
+		 		 stat(dirp->d_name,&fileDetails);
+				 mode_t permission=fileDetails.st_mode;
+				 char dir=permission & S_IFDIR ? 'd' : '-';
+				 if(dir=='d')
+				 {
+
+				 	cout<<"dir"<<dirp->d_name<<"\n";
+				 	if(strcmp(dirp->d_name,".")){
+				 		string presentDir=traverseDir+"/"+dirp->d_name;
+				 		destn=destn+"/"+dirp->d_name;
+				 		string targetDir;
+				 		targetDir=target+"/"+dirp->d_name;
+				 		directoryList.insert(directoryList.begin(),presentDir);
+				 		destinationList.insert(destinationList.begin(),targetDir);
+				 	}
+				 }
+				 else
+				 {
+
+				 	string targetFile="";
+				 	targetFile=target+"/"+dirp->d_name;
+
+				 	fopen(targetFile.c_str(),"w");
+				 }
+			}	
+
+
+	}
+
+}
+
+
+
+
+void copyFiles(string source,string destn)
+{
+
+	string homeDir1=homeDir;
+	FILE *fptr1,*fptr2;
+
+		if(destn.find("~")!=std::string::npos)
+		{	
+			int index=destn.find("~");
+			destn.replace(index,1,"");
+			homeDir1+=destn;
+			destn=homeDir1;
+
+
+		}	
+		 
+
+
+
+
+
+		 	destn+="/";
+		 	destn+=source;
+			fptr2=fopen(destn.c_str(),"w");
+			fptr1=fopen(source.c_str(),"r");
+			if(fptr1!=NULL && fptr2!=NULL){
+
+			char ch;
+			while((ch=fgetc(fptr1))!=EOF)
+			{
+			
+				fputc(ch,fptr2);
+			}
+			fclose(fptr1);
+			fclose(fptr2);
+			}
+			cout<<"files copied succesfully";
 
 }
 
@@ -171,13 +410,10 @@ void executeCommands(string command)
 	}
 
 	string commandpart=commandlist[0];
-	cout<<commandpart;
 	if(mapOfCommands.find(commandpart)!=mapOfCommands.end())
 	{
 
 		int comm=mapOfCommands[commandlist[0]];
-		cout<<comm;
-
 		switch(comm)
 		{
 
@@ -194,7 +430,9 @@ void executeCommands(string command)
 					break;
 			case 5:deletedir(command);
 					break;	
-			case 6:copyFiles(command);	
+			case 6:copyCommand(command);	
+					break;
+			case 7:move(command);
 					break;
 							}
 
@@ -212,10 +450,7 @@ void executeCommands(string command)
 void deletefile(string command)
 {
 
-
-		homeDir1=homeDir;
-
-
+	string homeDir1=homeDir;
 	stringstream test(command);
 	string segment;
 	vector<string> commandlist;
@@ -227,17 +462,22 @@ void deletefile(string command)
 	}
 
 
-	string fileName=commandlist[1];
-	homeDir1+="/";
-	homeDir1+=fileName;
-	int status=remove(homeDir1.c_str());
-	if(status!=0)
+	cout<<commandlist.size();
+
+	for(int i=1;i<commandlist.size();i++)
+	{
+
+		string folder=commandlist[i];
+		homeDir1+="/";
+		homeDir1+=folder;
+		cout<<homeDir1;
+		int status=remove(homeDir1.c_str());
+		if(status!=0)
 		cout<<"check the file name";
+		else
+			cout<<"Deleted succesfully";
 
-
-
-
-
+	}		
 
 
 
@@ -393,7 +633,7 @@ void commandModeOn()
 
 	populateCommands();
 	if (ioctl(0, TIOCGWINSZ, (char *) &size_win) < 0)
-		cout<<"error in fetching window size";
+		totalrows=size.ws_row;
 	char currentDir[255];
 	if(getcwd(currentDir, sizeof(currentDir)) == NULL) 
 	{
@@ -405,8 +645,7 @@ void commandModeOn()
 	int last_row=size_win.ws_row;
 
 	string mode="COMMAND MODE";
-
-
+	command="";
 
 	char ch;
 	int i=0;
@@ -431,14 +670,20 @@ void commandModeOn()
 			cout<<" ";
 			printf("\x1b[%d;%dH",last_row,mode.length()+command.length()+1);
 			//cout<<command;
+
 			 continue;
 		
 		}
 		if((int)ch==ENTER){
 			
-			if(command!="")
+			if(command!=""){
 				executeCommands(command);
+
+			}
+			
 			command="";
+		//	printf("\x1b[%d;0H",totalrows);
+		//	cout<<"mode";
 			continue;
 		}
 		
