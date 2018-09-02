@@ -2,6 +2,10 @@
 
 #ifndef COMMANDMODE_H
 #define COMMANDMODE_H
+#include <iostream>
+#include<string.h>
+
+#include<map>
 #include <vector>
 #include <stack>
 #include <string.h>
@@ -25,6 +29,7 @@
 #include <sys/ioctl.h>
 #include<string.h>
 #include <sstream>
+#include<signal.h>
 void gotodir(string command);
 void rename(string command);
 void populateCommands();

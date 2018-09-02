@@ -1,7 +1,13 @@
-#include <iostream>
-#include<string.h>
-using namespace std;
-#include<map>
+/*
+** Roll Number: 2018201101
+	Name: Suchismith Roy
+
+*/
+
+
+
+
+
 #include "normalmode.h"
 #include "commandMode.h"
 struct winsize size_win;
@@ -9,6 +15,7 @@ string homeDir;
 string homeDir1;
 	string command="";
 map<string,int> mapOfCommands;
+using namespace std;
 void populateCommands()
 {
 
@@ -19,8 +26,74 @@ void populateCommands()
 	mapOfCommands.insert(pair<string,int>("goto",3));
 	mapOfCommands.insert(pair<string,int>("delete_file",4));
 	mapOfCommands.insert(pair<string,int>("delete_dir",5));
-	//mapOfCommands.insert(pair<string,int>("create_file",0));
+	mapOfCommands.insert(pair<string,int>("copy",6));
 }
+
+void copyFiles(string command)
+{
+	stringstream test(command);
+	string segment="";
+	vector<string> commandlist;
+	string homeDir1=homeDir;
+	FILE *fptr,*source;
+
+	while(getline(test,segment,' '))
+	{   
+        
+  		commandlist.push_back(segment);
+ 		 cout<<segment<<"\n";
+	}
+
+		 string command1=commandlist[0];
+		 string destn=commandlist[commandlist.size()-1];
+
+		 if(destn.find("~")!=std::string::npos)
+		
+		{	
+			int index=destn.find("~");
+			destn.replace(index,1,"");
+			homeDir1+=destn;
+			destn=homeDir1;
+
+
+		}	
+
+
+
+		 for(int i=1;i<=commandlist.size()-2;i++)
+		 {
+
+		 	string file=commandlist[i];
+
+
+
+
+
+		 	destn+="/";
+		 	destn+=file;
+			fptr=fopen(destn.c_str(),"w");
+			source=fopen(file.c_str(),"r");
+			if(fptr!=NULL && source!=NULL){
+
+			char ch;
+			while((ch=fgetc(source))!=EOF)
+			{
+			
+				fputc(ch,fptr);
+			}
+			fclose(fptr);
+			fclose(source);
+			}
+		}
+
+}
+
+
+
+
+
+
+
 
 void gotodir(string command)
 {	
@@ -120,8 +193,9 @@ void executeCommands(string command)
 			case 4:deletefile(command);
 					break;
 			case 5:deletedir(command);
-					break;		
-
+					break;	
+			case 6:copyFiles(command);	
+					break;
 							}
 
 	}

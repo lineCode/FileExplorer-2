@@ -305,7 +305,18 @@ void handleOutput(){
 
 			   	path+=selectedDir;
 				if (pid == 0) {
+
+					if(path.find(".txt")!=string::npos || path.find(".h")!=string::npos || path.find(".cpp")!=string::npos|| path.find(".c")!=string::npos)
+					{
+					execl("/usr/bin/gedit", "gedit", path.c_str(), (char *)0);
+					}
+  					else if(path.find(".mp3")!=string::npos || path.find(".mp4")!=string::npos ||path.find(".mkv")!=string::npos )
+  					execl("/snap/bin/vlc", "vlc", path.c_str(), (char *)0);	
+  					else if(path.find(".pdf")!=string::npos)
+  					execl("/usr/bin/evince", "evince", path.c_str(), (char *)0);
+  					else
   					execl("/usr/bin/xdg-open", "xdg-open", path.c_str(), (char *)0);
+
   					exit(1);
 				 }
 			  	}
@@ -427,7 +438,21 @@ void printStatusLine(string mode)
 	
 }
 
+void fetchWindowSize(int descriptor)
+{
+	if (ioctl(descriptor, TIOCGWINSZ, (char *) &size) < 0)
+	errorHandler(13);
+	total_rows=size.ws_row-2;
+	
+}
 
+void resizeSignal(int signal)
+{
+	fetchWindowSize(0);
+	directories.clear();
+	listFile(currentDir);
+
+}
 
 
 void listFile(string dirname)
@@ -443,11 +468,9 @@ void listFile(string dirname)
 		
 		if(dirname==".." && visit==1)
 			dirname=homeDirectory;
-			
-
-		if (ioctl(0, TIOCGWINSZ, (char *) &size) < 0)
-			errorHandler(13);
-		total_rows=size.ws_row-2;
+		if(signal(SIGWINCH,resizeSignal)!=SIG_ERR)
+			fetchWindowSize(0);
+		
 
 		if((dp = opendir(dirname.c_str()))==NULL){
 			cout<<"unable to open"<<dirname;
