@@ -46,6 +46,7 @@ void copyDirectories(string source,string destination);
 void move(string command);
 void moveFiles(string source,string destination);
 void moveDirectories(string source,string destination);
+void deleteDirRecu(string source);
 #define ESC  27
 #define ENTER   10
 #define HOME 'h'

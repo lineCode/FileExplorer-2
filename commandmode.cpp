@@ -19,6 +19,7 @@ int totalrows;
 	string command="";
 map<string,int> mapOfCommands;
 using namespace std;
+
 void populateCommands()
 {
 
@@ -32,7 +33,7 @@ void populateCommands()
 	mapOfCommands.insert(pair<string,int>("copy",6));
 	mapOfCommands.insert(pair<string,int>("move",7));
 }
-
+// move files and directories
 
 void move(string command)
 {
@@ -145,7 +146,7 @@ void moveFiles(string source,string destn)
 
 
 
-
+//copies files and directories
 
 
 void copyCommand(string command)
@@ -198,8 +199,10 @@ void copyCommand(string command)
 
 void moveDirectories(string source,string destn)
 {
-	copyDirectories(source,destn);
-		
+	string homeDir1=homeDir;
+	copyDirectories(source,destn);	
+	homeDir1=homeDir1+"/"+source;
+	deleteDirRecu(homeDir1);
 
 
 }
@@ -241,16 +244,11 @@ void copyDirectories(string source,string destn)
 		
    			stat(target.c_str(), &fileDetails);
 		 	mkdir(target.c_str(),fileDetails.st_mode);
-
-
-
-
 		 	DIR *dp;
 		 	if( (dp = opendir(traverseDir.c_str()))!=NULL)
 		 		dirp = readdir(dp);
 		 	
 		 	chdir(traverseDir.c_str());
-		 	cout<<target<<"\n";
 		 	while ((dirp = readdir(dp)) != NULL){
 
 		 		 stat(dirp->d_name,&fileDetails);
@@ -259,7 +257,6 @@ void copyDirectories(string source,string destn)
 				 if(dir=='d')
 				 {
 
-				 	cout<<"dir"<<dirp->d_name<<"\n";
 				 	if(strcmp(dirp->d_name,".")){
 				 		string presentDir=traverseDir+"/"+dirp->d_name;
 				 		destn=destn+"/"+dirp->d_name;
@@ -332,7 +329,7 @@ void copyFiles(string source,string destn)
 
 
 
-
+//changes curent directory to given directory
 
 void gotodir(string command)
 {	
@@ -368,7 +365,7 @@ void gotodir(string command)
 
 
 }
-
+//renames the files mentioned
 
 void rename(string command)
 {
@@ -397,6 +394,10 @@ void rename(string command)
 
 
 }
+
+
+
+
 void executeCommands(string command)
 {
 
@@ -445,7 +446,7 @@ void executeCommands(string command)
 
 
 }
-
+// delete files
 
 void deletefile(string command)
 {
@@ -482,6 +483,54 @@ void deletefile(string command)
 
 
 }
+//deletes 
+void deleteDirRecu(string path)
+{
+
+	DIR *dp;
+	struct dirent *dirp;
+	cout<<path;
+
+	chdir(path.c_str());
+	if( (dp = opendir(path.c_str()))!=NULL){
+		while ((dirp = readdir(dp)) != NULL){
+
+		 		 stat(dirp->d_name,&fileDetails);
+				 mode_t permission=fileDetails.st_mode;
+				 char dir=permission & S_IFDIR ? 'd' : '-';
+
+				 if(dir=='d')
+				 {
+
+				 	if(strcmp(dirp->d_name,".") &&  strcmp(dirp->d_name,"..")){
+				 		string presentDir=path+"/"+dirp->d_name;
+				 		cout<<presentDir<<"\n";
+				 		deleteDirRecu(presentDir);
+				 		rmdir(presentDir.c_str());
+				 	}
+				 	else{
+
+				 		rmdir(dirp->d_name);
+				 	}
+
+				 }
+				 else
+				 {
+
+				 	remove(dirp->d_name);
+				 }
+			}	
+	}
+
+	rmdir(path.c_str());
+
+}
+
+
+
+
+
+
 
 
 void deletedir(string command)
@@ -499,14 +548,27 @@ void deletedir(string command)
 	}
 
 
-	string directoryName=commandlist[1];
-	homeDir1+="/";
-	homeDir1+=directoryName;
+	for(int i=1;i<commandlist.size();i++)
+	{
 
-	int status=rmdir(homeDir1.c_str());
-	if(status!=0)
-		cout<<"check the file name";
+		string folder=commandlist[i];
+		homeDir1+="/";
+		homeDir1+=folder;
+		cout<<homeDir1;
+		deleteDirRecu(homeDir1);
 
+	}	
+
+
+
+	// string directoryName=commandlist[1];
+	// homeDir1+="/";
+	// homeDir1+=directoryName;
+
+	// int status=rmdir(homeDir1.c_str());
+	// if(status!=0)
+	// 	cout<<"check the file name";
+	
 
 
 
@@ -515,7 +577,7 @@ void deletedir(string command)
 
 
 
-
+// creates new directory
 void createDir(string command)
 {
 
@@ -566,6 +628,8 @@ void createDir(string command)
 		mkdir(destn.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		
 }
+
+//create new file
 void createFile(string command)
 {
 	
@@ -682,8 +746,6 @@ void commandModeOn()
 			}
 			
 			command="";
-		//	printf("\x1b[%d;0H",totalrows);
-		//	cout<<"mode";
 			continue;
 		}
 		
